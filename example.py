@@ -28,11 +28,10 @@ def test4():
 		print(a == b)
 	except RecursionError:
 		print('NO:(')
-	a = DeepObject(a)
-	b = DeepObject(b)
-	b.obj[0] = None
+	a = DeepWrapper(a)
+	b = DeepWrapper(b)
 	print(a == b)
-	b.obj[0] = 999
+	b.obj[0] = None
 	print(a == b)
 
 print('------------')

@@ -31,13 +31,13 @@ class DeepIterator:
 		return len(self.top) - 1
 
 #Обертка для сильно вложенных объектов:
-class DeepObject:
+class DeepWrapper:
 
 	def __init__(self, obj): self.obj = obj
 
 	def __eq__(self, rhs):
 
-		if type(rhs) is not DeepObject: raise TypeError()
+		if type(rhs) is not DeepWrapper: raise TypeError()
 		lhs = DeepIterator(self.obj)
 		rhs = DeepIterator(rhs.obj)
 		for itl, itr in zip(lhs, rhs):
