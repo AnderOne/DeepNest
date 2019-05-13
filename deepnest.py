@@ -61,6 +61,10 @@ class DeepWrapper:
 			if type(itl) is DeepIterator.Pair:
 				if itl.key != itr.key:
 					return False
+				vl = itl.val; vr = itr.val
+				if type(vl) is not type(vr):
+					return False
+				itl = vl; itr = vr
 			if type(itl) in (
 			str, float, int, bool, None
 			):
