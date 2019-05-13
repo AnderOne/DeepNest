@@ -81,3 +81,41 @@ class DeepWrapper:
 		return enl and enr
 
 	#TODO: ...
+
+def dumps(dat):
+
+	dat = DeepIterator(dat); ans = ''; top = []; l = None
+	for i in dat:
+		while l and l > dat.level():
+			ans += top.pop()
+			l -= 1
+		if l == dat.level():
+			ans += ', '
+		l = dat.level()
+		#Упаковка ассоциативных массивов:
+		if type(i) is DeepIterator.Pair:
+			ans += '"' + str(i.key) + '": '
+			i = i.val
+		if type(i) is dict:
+			top.append('}')
+			ans += '{'
+		#Упаковка списков и кортежей:
+		if type(i) in (list, tuple):
+			top.append(']')
+			ans += '['
+		#Упаковка скалярных типов:
+		if type(i) is bool:
+			ans += 'true' if i else 'false'
+		if type(i) is str:
+			ans += '"' + str(i) + '"'
+		if type(i) in (float, int):
+			ans += str(i)
+		if type(i) is None:
+			ans += 'null'
+	while top:
+		ans += top[-1]
+		top.pop()
+
+	return ans
+
+#TODO: loads(...)
