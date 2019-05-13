@@ -31,8 +31,10 @@ def test4():
 	a = DeepWrapper(a)
 	b = DeepWrapper(b)
 	print(a == b)
+	print(a != b)
 	b.obj[0] = None
 	print(a == b)
+	print(a != b)
 
 print('------------')
 test1()

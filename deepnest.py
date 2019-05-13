@@ -5,9 +5,7 @@ class DeepIterator:
 		def __init__(self, key, val):  self.key, self.val = key, val
 		def __str__(self): return str((self.key, self.val))
 
-	def __init__(self, obj):
-		self.top = [[(obj,), 0]]
-		self.obj = None
+	def __init__(self, obj): self.top, self.obj = [[(obj,), 0]], None
 
 	def __next__(self):
 
@@ -19,12 +17,10 @@ class DeepIterator:
 
 		buf = self.top[-1]
 		if len(buf) == 3:
-			key = buf[2][buf[1]]
-			obj = buf[0][key]
+			key = buf[2][buf[1]]; obj = buf[0][key]
 			self.obj = DeepIterator.Pair(key, obj)
 		else:
-			pos = buf[1]
-			obj = buf[0][pos]
+			pos = buf[1]; obj = buf[0][pos]
 			self.obj = obj
 		buf[1] += 1
 
@@ -54,31 +50,31 @@ class DeepWrapper:
 		if type(rhs) is not DeepWrapper:
 			raise TypeError()
 
-		lhs = DeepIterator(self.obj); rhs = DeepIterator(rhs.obj)
-		for itl, itr in zip(lhs, rhs):
-			if lhs.level() != rhs.level(): return False
-			if type(itl) is not type(itr): return False
-			if type(itl) is DeepIterator.Pair:
-				if itl.key != itr.key:
+		it1 = DeepIterator(self.obj); it2 = DeepIterator(rhs.obj)
+		for d1, d2 in zip(it1, it2):
+			if it1.level() != it2.level(): return False
+			if type(d1) is not type(d2): return False
+			if type(d1) is DeepIterator.Pair:
+				if d1.key != d2.key:
 					return False
-				vl = itl.val; vr = itr.val
+				vl = d1.val; vr = d2.val
 				if type(vl) is not type(vr):
 					return False
-				itl = vl; itr = vr
-			if type(itl) in (
+				d1 = vl; d2 = vr
+			if type(d1) in (
 			str, float, int, bool, None
 			):
-				if itl != itr:
+				if d1 != d2:
 					return False
 
-		try: next(lhs)
-		except StopIteration: enl = True
-		else: enl = False
-		try: next(rhs)
-		except StopIteration: enr = True
-		else: enr = False
+		try: next(it1)
+		except StopIteration: e1 = True
+		else: e1 = False
+		try: next(it2)
+		except StopIteration: e2 = True
+		else: e2 = False
 
-		return enl and enr
+		return e1 and e2
 
 	#TODO: ...
 
