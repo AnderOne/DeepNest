@@ -1,7 +1,13 @@
 #Итератор для обхода в глубину сильно вложенных объектов:
 class DeepIterator:
 
-	def __init__(self, obj): self.top = [[(obj,), 0]]; self.obj = None
+	class Pair:
+		def __init__(self, key, val):  self.key, self.val = key, val
+		def __str__(self): return str((self.key, self.val))
+
+	def __init__(self, obj):
+		self.top = [[(obj,), 0]]
+		self.obj = None
 
 	def __next__(self):
 
@@ -15,7 +21,7 @@ class DeepIterator:
 		if len(buf) == 3:
 			key = buf[2][buf[1]]
 			obj = buf[0][key]
-			self.obj = (key, obj)
+			self.obj = DeepIterator.Pair(key, obj)
 		else:
 			pos = buf[1]
 			obj = buf[0][pos]
@@ -52,10 +58,14 @@ class DeepWrapper:
 		for itl, itr in zip(lhs, rhs):
 			if lhs.level() != rhs.level(): return False
 			if type(itl) is not type(itr): return False
+			if type(itl) is DeepIterator.Pair:
+				if itl.key != itr.key:
+					return False
 			if type(itl) in (
 			str, float, int, bool, None
 			):
-				if itl != itr: return False
+				if itl != itr:
+					return False
 
 		try: next(lhs)
 		except StopIteration: enl = True
