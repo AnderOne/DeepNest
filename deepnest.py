@@ -1,3 +1,5 @@
+import re
+
 #Итератор для обхода в глубину сильно вложенных объектов:
 class DeepIterator:
 
@@ -114,4 +116,96 @@ def dumps(dat):
 
 	return ans
 
-#TODO: loads(...)
+IND_DATA = 1
+EXP_BOOL = r'(true|false)'
+IND_BOOL = 2
+EXP_NULL = r'(null)'
+IND_NULL = 3
+EXP_NUM = r'([+-]?\d+((\.\d*)?([eE][+-]\d+)?))'
+IND_NUM = 4
+IND_NUM_FRAC = 5
+IND_NUM_DOT = 6
+IND_NUM_EXP = 7
+EXP_STR = r'("((\\.|[^\\"])*)")'
+IND_STR = 8
+IND_STR_CHAR = 9
+EXP_DOT = r'(:)?'
+IND_DOT = 11
+EXP_SEP = r'(,)'
+IND_SEP = 12
+EXP_BRC = r'(\[|\]|\{|\})'
+IND_BRC = 13
+
+EXP = re.compile(
+r'\s*(' + EXP_BOOL + '|' + EXP_NULL + '|' + EXP_NUM + '|' + EXP_STR + r')\s*' +\
+EXP_DOT + r'\s*|\s*' +\
+EXP_SEP + r'\s*|\s*' +\
+EXP_BRC + r'\s*'
+)
+
+def loads(txt):
+
+	top = []; pos = 0; dat = None
+
+	while pos < len(txt):
+		m = EXP.match(txt, pos)
+		if m is None:
+			raise Exception('Incorrect syntax in pos ' + str(pos))
+			break
+		pos = m.end()
+		#Проверяем скобки:
+		if   m.group(IND_BRC) == '}':
+			if type(top[-1][0]) is not dict: pass	#ERROR!
+			dat = top[-1][0]
+			if len(top) == 1: break
+			top.pop()
+		elif m.group(IND_BRC) == ']':
+			if type(top[-1][0]) is not list: pass	#ERROR!
+			dat = top[-1][0]
+			if len(top) == 1: break
+			top.pop()
+		elif m.group(IND_BRC) == '{':
+			#[]{},:
+			dat = dict(); top.append([dat, None])
+			continue
+		elif m.group(IND_BRC) == '[':
+			#[]{},:
+			dat = list(); top.append([dat])
+			continue
+		#Проверяем данные:
+		elif m.group(IND_BOOL):
+			#bool
+			dat = (m.group(IND_BOOL) == 'true')
+		elif m.group(IND_NULL):
+			#null
+			dat = None
+		elif m.group(IND_NUM):
+			#num
+			if m.group(IND_NUM_FRAC):
+				dat = float(m.group(IND_DATA))
+			else:
+				dat = int(m.group(IND_DATA))
+		elif m.group(IND_STR):
+			#str
+			dat = str(m.group(IND_STR_CHAR))
+		#Проверяем разделители:
+		if   m.group(IND_SEP) == ',':
+			#TODO: ПРОВЕРЯТЬ РАССТАНОВКУ ЛЕКСЕМ!
+			continue
+		elif m.group(IND_DOT) == ':':
+			#TODO: ПРОВЕРЯТЬ РАССТАНОВКУ ЛЕКСЕМ!
+			if type(dat) is not str:
+				#ERROR:	Неверный тип ключа!
+				pass
+			top[-1][1] = dat
+			continue
+		#Проверяем вышестояющий объект:
+		if not top: top.append([dat])
+		elif type(top[-1][0]) is list:
+			top[-1][0].append(dat)
+		elif type(top[-1][0]) is dict:
+			key = top[-1][1]
+			top[-1][0][key] = dat
+
+	return \
+	top[0][0] if top else None
