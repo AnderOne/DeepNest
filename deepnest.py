@@ -108,7 +108,7 @@ def dumps(dat):
 			ans += '"' + str(i) + '"'
 		if type(i) in (float, int):
 			ans += str(i)
-		if type(i) is None:
+		if i is None:
 			ans += 'null'
 	while top:
 		ans += top[-1]
