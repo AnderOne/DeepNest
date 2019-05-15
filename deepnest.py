@@ -81,8 +81,6 @@ class DeepWrapper:
 	def items(self):
 		return DeepIterator(self.obj)
 
-	#TODO: ...
-
 def dumps(dat):
 
 	dat = DeepIterator(dat); ans = ''; top = []; l = None
@@ -132,18 +130,19 @@ IND_NUM_EXP = 7
 EXP_STR = r'("((\\.|[^\\"])*)")'
 IND_STR = 8
 IND_STR_CHAR = 9
-EXP_DOT = r'(:)?'
-IND_DOT = 11
-EXP_SEP = r'(,)'
-IND_SEP = 12
+EXP_COL = r'(:)?'
+IND_COL = 11
+EXP_COM = r'(,)'
+IND_COM = 12
 EXP_BRC = r'(\[|\]|\{|\})'
 IND_BRC = 13
 
 EXP = re.compile(
-r'\s*(' + EXP_BOOL + '|' + EXP_NULL + '|' + EXP_NUM + '|' + EXP_STR + r')\s*' +\
-EXP_DOT + r'\s*|\s*' +\
-EXP_SEP + r'\s*|\s*' +\
-EXP_BRC + r'\s*'
+r'\s*(' + EXP_BOOL + '|' + EXP_NULL + '|' + EXP_NUM + '|' + EXP_STR + r')\s*' + EXP_COL + r'\s*' +\
+'|' +\
+r'\s*'  + EXP_COM + r'\s*' + \
+'|' +\
+r'\s*'  + EXP_BRC + r'\s*'
 )
 
 def loads(txt):
@@ -168,11 +167,9 @@ def loads(txt):
 			if len(top) == 1: break
 			top.pop()
 		elif m.group(IND_BRC) == '{':
-			#[]{},:
 			dat = dict(); top.append([dat, None])
 			continue
 		elif m.group(IND_BRC) == '[':
-			#[]{},:
 			dat = list(); top.append([dat])
 			continue
 		#Проверяем данные:
@@ -192,10 +189,10 @@ def loads(txt):
 			#str
 			dat = str(m.group(IND_STR_CHAR))
 		#Проверяем разделители:
-		if   m.group(IND_SEP) == ',':
+		if   m.group(IND_COM) == ',':
 			#TODO: ПРОВЕРЯТЬ РАССТАНОВКУ ЛЕКСЕМ!
 			continue
-		elif m.group(IND_DOT) == ':':
+		elif m.group(IND_COL) == ':':
 			#TODO: ПРОВЕРЯТЬ РАССТАНОВКУ ЛЕКСЕМ!
 			if type(dat) is not str:
 				#ERROR:	Неверный тип ключа!
