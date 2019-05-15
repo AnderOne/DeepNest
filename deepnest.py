@@ -140,44 +140,71 @@ IND_BRC = 13
 EXP = re.compile(
 r'\s*(' + EXP_BOOL + '|' + EXP_NULL + '|' + EXP_NUM + '|' + EXP_STR + r')\s*' + EXP_COL + r'\s*' +\
 '|' +\
-r'\s*'  + EXP_COM + r'\s*' + \
+r'\s*'  + EXP_COM + r'\s*' +\
 '|' +\
 r'\s*'  + EXP_BRC + r'\s*'
 )
 
 def loads(txt):
 
-	top = []; pos = 0; dat = None
+	if type(txt) is not str: raise TypeError('The JSON object must be str')
 
-	while pos < len(txt):
+	if len(txt) == 0: raise Exception('Unexpected end of string in pos 0')
+
+	top = []; pos = 0; dat = None; fst = True; m = None
+
+	while True:
+		if m is not None: pos = m.end()
+		if pos >= len(txt): break
+
 		m = EXP.match(txt, pos)
-		if m is None:
-			raise Exception('Incorrect syntax in pos ' + str(pos))
-			break
-		pos = m.end()
+		if m is None: raise Exception('Incorrect syntax in pos ' + str(pos))
+
 		#Проверяем скобки:
 		if   m.group(IND_BRC) == '}':
-			if type(top[-1][0]) is not dict: pass	#ERROR!
+			if not top or type(top[-1][0]) is not dict:
+				raise Exception(
+				'Extra closing bracket in pos ' + str(pos)
+				)
 			dat = top[-1][0]
-			if len(top) == 1: break
 			top.pop()
+			fst = False
+
 		elif m.group(IND_BRC) == ']':
-			if type(top[-1][0]) is not list: pass	#ERROR!
+			if not top or type(top[-1][0]) is not list:
+				raise Exception(
+				'Extra closing bracket in pos ' + str(pos)
+				)
 			dat = top[-1][0]
-			if len(top) == 1: break
 			top.pop()
+			fst = False
+
 		elif m.group(IND_BRC) == '{':
+			if not fst:
+				raise Exception(
+				"Unexpected token '{' in pos " + str(pos)
+				)
 			dat = dict(); top.append([dat, None])
+			fst = True
 			continue
+
 		elif m.group(IND_BRC) == '[':
+			if not fst:
+				raise Exception(
+				"Unexpected token '[' in pos " + str(pos)
+				)
 			dat = list(); top.append([dat])
+			fst = True
 			continue
+
 		#Проверяем данные:
 		elif m.group(IND_BOOL):
 			#bool
 			dat = (m.group(IND_BOOL) == 'true')
+			fst = False
 		elif m.group(IND_NULL):
 			#null
+			fst = False
 			dat = None
 		elif m.group(IND_NUM):
 			#num
@@ -185,27 +212,48 @@ def loads(txt):
 				dat = float(m.group(IND_DATA))
 			else:
 				dat = int(m.group(IND_DATA))
+			fst = False
 		elif m.group(IND_STR):
 			#str
 			dat = str(m.group(IND_STR_CHAR))
+			fst = False
+
 		#Проверяем разделители:
 		if   m.group(IND_COM) == ',':
-			#TODO: ПРОВЕРЯТЬ РАССТАНОВКУ ЛЕКСЕМ!
+			if fst or not top or (type(top[-1][0]) not in (dict, list)):
+				pos = m.start(IND_COM)
+				raise Exception(
+				'Unexpected token \',\' in pos ' + str(pos)
+				)
+			fst = True
 			continue
 		elif m.group(IND_COL) == ':':
-			#TODO: ПРОВЕРЯТЬ РАССТАНОВКУ ЛЕКСЕМ!
+			if not top or type(top[-1][0]) is not dict:
+				pos = m.start(IND_COL)
+				raise Exception(
+				'Unexpected token \':\' in pos ' + str(pos)
+				)
 			if type(dat) is not str:
-				#ERROR:	Неверный тип ключа!
+				raise Exception(
+				'Incorrect type of key in pos ' + str(pos)
+				)
 				pass
 			top[-1][1] = dat
+			fst = True
 			continue
+
 		#Проверяем вышестояющий объект:
-		if not top: top.append([dat])
+		if not top:
+			continue
 		elif type(top[-1][0]) is list:
 			top[-1][0].append(dat)
 		elif type(top[-1][0]) is dict:
 			key = top[-1][1]
 			top[-1][0][key] = dat
 
-	return \
-	top[0][0] if top else None
+	if top:
+		raise Exception(
+		'Unexpected end of string in pos ' + str(pos)
+		)
+
+	return dat
