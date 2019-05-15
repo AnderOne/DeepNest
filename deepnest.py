@@ -78,6 +78,9 @@ class DeepWrapper:
 
 		return e1 and e2
 
+	def items(self):
+		return DeepIterator(self.obj)
+
 	#TODO: ...
 
 def dumps(dat):
