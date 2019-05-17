@@ -88,29 +88,36 @@ def dumps(dat):
 		while l and l > dat.level():
 			ans += top.pop()
 			l -= 1
-		if l == dat.level():
+		if   l == dat.level():
 			ans += ', '
 		l = dat.level()
 		#Упаковка ассоциативных массивов:
-		if type(i) is DeepIterator.Pair:
+		if   type(i) is DeepIterator.Pair:
 			ans += '"' + str(i.key) + '": '
 			i = i.val
-		if type(i) is dict:
+		if   type(i) is dict:
 			top.append('}')
 			ans += '{'
 		#Упаковка списков и кортежей:
-		if type(i) in (list, tuple):
+		elif type(i) in (list, tuple):
 			top.append(']')
 			ans += '['
 		#Упаковка скалярных типов:
-		if type(i) is bool:
+		elif type(i) is bool:
 			ans += 'true' if i else 'false'
-		if type(i) is str:
+		elif type(i) is str:
 			ans += '"' + str(i) + '"'
-		if type(i) in (float, int):
+		elif type(i) in (float, int):
 			ans += str(i)
-		if i is None:
+		elif i is None:
 			ans += 'null'
+		else:
+			raise TypeError(
+			'Object of type \'' +\
+			type(i).__name__  +\
+			'\' is not JSON ' +\
+			'serializable'
+			)
 	while top:
 		ans += top[-1]
 		top.pop()
