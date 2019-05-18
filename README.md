@@ -1,4 +1,4 @@
-**DeepNest** -- Python module for a treatment of the deeply nested objects presented in JSON format.
+**DeepNest** -- Python module for a treatment of deeply nested objects presented in JSON format.
 
 ```
 Python          |JSON
