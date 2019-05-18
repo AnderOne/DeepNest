@@ -98,6 +98,41 @@ def test7():
 	b = loads(s)
 	print('YES!')
 
+def test8():
+	TEST = [
+	None, '', '@', '{', '[', '}', ']', '{]', '[}', '{}[]', '[]{}',
+	',', ':', '[1,,]', '[1,]', '[]:', '2:',
+	'{"a",}', '{"a":}', '{1: -2}',
+	'{"a", "b"}'
+	]
+	for s in TEST:
+		try:
+			print(loads(s))
+		except Exception as e:
+			print(
+			'ERROR: ' + (
+			'"' + s + '"' if type(s) is str else str(s)
+			), ' -- ', e
+			)
+		else:
+			raise \
+			Exception(
+			'Fail!'
+			)
+
+def test9():
+	try:
+		dumps(- 2 + 1j)
+	except TypeError as e:
+		print(
+		'ERROR: ', e
+		)
+	else:
+		raise \
+		Exception(
+		'Fail!'
+		)
+
 print('------------')
 test1()
 print('------------')
@@ -112,3 +147,7 @@ print('------------')
 test6()
 print('------------')
 test7()
+print('------------')
+test8()
+print('------------')
+test9()
