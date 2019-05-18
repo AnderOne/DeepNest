@@ -158,7 +158,7 @@ def loads(txt):
 
 	if len(txt) == 0: raise Exception('Unexpected end of string in pos 0')
 
-	top = []; pos = 0; dat = None; fst = True; m = None
+	top = []; pos = 0; dat = None; fst = True; sep = False; key = False; m = None
 
 	while True:
 		if m is not None: pos = m.end()
@@ -171,59 +171,70 @@ def loads(txt):
 		if   m.group(IND_BRC) == '}':
 			if not top or type(top[-1][0]) is not dict:
 				raise Exception(
-				'Extra closing bracket in pos ' + str(pos)
+					'Extra closing bracket in pos ' + str(pos)
+				)
+			if sep:
+				raise Exception(
+					"Unexpected token '}' in pos " + str(pos)
 				)
 			dat = top[-1][0]
 			top.pop()
-			fst = False
 
 		elif m.group(IND_BRC) == ']':
 			if not top or type(top[-1][0]) is not list:
 				raise Exception(
-				'Extra closing bracket in pos ' + str(pos)
+					'Extra closing bracket in pos ' + str(pos)
+				)
+			if sep:
+				raise Exception(
+					"Unexpected token ']' in pos " + str(pos)
 				)
 			dat = top[-1][0]
 			top.pop()
-			fst = False
 
 		elif m.group(IND_BRC) == '{':
 			if not fst:
 				raise Exception(
-				"Unexpected token '{' in pos " + str(pos)
+					"Unexpected token '{' in pos " + str(pos)
 				)
 			dat = dict(); top.append([dat, None])
+			key = True
+			sep = False
 			fst = True
 			continue
 
 		elif m.group(IND_BRC) == '[':
 			if not fst:
 				raise Exception(
-				"Unexpected token '[' in pos " + str(pos)
+					"Unexpected token '[' in pos " + str(pos)
 				)
 			dat = list(); top.append([dat])
+			key = False
+			sep = False
 			fst = True
 			continue
 
 		#Проверяем данные:
-		elif m.group(IND_BOOL):
-			#bool
-			dat = (m.group(IND_BOOL) == 'true')
-			fst = False
-		elif m.group(IND_NULL):
-			#null
-			fst = False
-			dat = None
-		elif m.group(IND_NUM):
-			#num
-			if m.group(IND_NUM_FRAC):
-				dat = float(m.group(IND_DATA))
-			else:
-				dat = int(m.group(IND_DATA))
-			fst = False
-		elif m.group(IND_STR):
-			#str
-			dat = str(m.group(IND_STR_CHAR))
-			fst = False
+		if m.group(IND_DATA):
+			if key and not m.group(IND_COL):
+				raise Exception(
+				"Expecting ':' delimiter in pos " + str(m.end())
+				)
+			if   m.group(IND_NUM):
+				#num
+				if m.group(IND_NUM_FRAC):
+					dat = float(m.group(IND_DATA))
+				else:
+					dat = int(m.group(IND_DATA))
+			elif m.group(IND_STR):
+				#str
+				dat = str(m.group(IND_STR_CHAR))
+			elif m.group(IND_BOOL):
+				#bool
+				dat = (m.group(IND_BOOL) == 'true')
+			elif m.group(IND_NULL):
+				#null
+				dat = None
 
 		#Проверяем разделители:
 		if   m.group(IND_COM) == ',':
@@ -232,6 +243,8 @@ def loads(txt):
 				raise Exception(
 				'Unexpected token \',\' in pos ' + str(pos)
 				)
+			key = False
+			sep = True
 			fst = True
 			continue
 		elif m.group(IND_COL) == ':':
@@ -246,17 +259,24 @@ def loads(txt):
 				)
 				pass
 			top[-1][1] = dat
+			key = False
+			sep = True
 			fst = True
 			continue
 
+		key = False
+		sep = False
+		fst = False
+
 		#Проверяем вышестояющий объект:
-		if not top:
-			continue
-		elif type(top[-1][0]) is list:
-			top[-1][0].append(dat)
+		if not top: continue
 		elif type(top[-1][0]) is dict:
-			key = top[-1][1]
-			top[-1][0][key] = dat
+			top[-1][0][
+			top[-1][1]
+			] = dat
+		elif type(top[-1][0]) is list:
+			top[-1][0].\
+			append(dat)
 
 	if top:
 		raise Exception(
